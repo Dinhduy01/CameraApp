@@ -2,14 +2,19 @@ package com.example.testcam;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.params.StreamConfigurationMap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -21,7 +26,6 @@ import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
@@ -34,6 +38,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -47,7 +52,7 @@ public class CameraFragment extends Fragment {
     private CameraDevice cameraDevice;
     private CaptureRequest.Builder captureRequestBuilder;
     private CameraCaptureSession cameraCaptureSession;
-
+    private int w, h;
     private CameraManager cameraManager;
     private String cameraId;
     private int currentCameraId;
@@ -59,6 +64,8 @@ public class CameraFragment extends Fragment {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
             setTextureViewAspectRatio(width, height);
+            w = width;
+            h = height;
             openCamera(0);
         }
 
@@ -107,6 +114,8 @@ public class CameraFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_camera, container, false);
+
+
         ImageButton captureButton = view.findViewById(R.id.captureButton);
         ImageButton changeCamera = view.findViewById(R.id.switchCameraButton);
         captureButton.setOnClickListener(new View.OnClickListener() {
@@ -125,6 +134,13 @@ public class CameraFragment extends Fragment {
                 }
             }
         });
+        ImageButton galleryButton = view.findViewById(R.id.galleryButton);
+        galleryButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openGallery();
+            }
+        });
         ImageButton switchAspectRatioButton = view.findViewById(R.id.switchAspectRatioButton);
         switchAspectRatioButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -135,13 +151,11 @@ public class CameraFragment extends Fragment {
         });
         return view;
     }
-    private boolean isAspectRatioSquare = true;
-//    private void switchAspectRatio() {
-//        isAspectRatioSquare = !isAspectRatioSquare;
-//        setTextureViewAspectRatio(textureView.getWidth(),textureView.getHeight());// Chuyển đổi trạng thái
-//
-//        textureView.requestLayout();
-//    }
+    private void openGallery() {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse("content://media/internal/images/media"));
+        startActivity(intent);
+    }
     private void takePicture() {
         if (cameraDevice == null) {
             Log.e(TAG, "CameraDevice is null. Cannot take picture.");
@@ -157,13 +171,46 @@ public class CameraFragment extends Fragment {
 
         try {
             FileOutputStream outputStream = new FileOutputStream(pictureFile);
-            textureView.getBitmap().compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+
+            // Kiểm tra hướng của ảnh
+            int rotation = requireActivity().getWindowManager().getDefaultDisplay().getRotation();
+            int orientation = getOrientation(rotation);
+
+            // Nếu ảnh được chụp trong chế độ ngang, xoay lại thành chế độ dọc
+            if (orientation == 90 || orientation == 270) {
+                Bitmap rotatedBitmap = rotateBitmap(textureView.getBitmap(), 90);
+                rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+            } else {
+                textureView.getBitmap().compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+            }
+
             outputStream.close();
             Log.d(TAG, "Picture saved: " + pictureFile.getAbsolutePath());
         } catch (IOException e) {
             Log.e(TAG, "Error saving picture: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private int getOrientation(int rotation) {
+        switch (rotation) {
+            case Surface.ROTATION_0:
+                return 90;
+            case Surface.ROTATION_90:
+                return 0;
+            case Surface.ROTATION_180:
+                return 270;
+            case Surface.ROTATION_270:
+                return 180;
+            default:
+                return 0;
+        }
+    }
+
+    private Bitmap rotateBitmap(Bitmap bitmap, int degrees) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(degrees);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
     // Phương thức để tạo tập tin lưu ảnh trong thư mục Pictures
@@ -184,6 +231,7 @@ public class CameraFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         textureView = view.findViewById(R.id.surfaceView);
+
 
     }
 
@@ -238,6 +286,7 @@ public class CameraFragment extends Fragment {
             Log.e(TAG, "Cannot access the camera", e);
         }
     }
+
     private void switchCamera() throws CameraAccessException {
         closeCamera();
         String[] cameraIds = cameraManager.getCameraIdList();
@@ -247,16 +296,26 @@ public class CameraFragment extends Fragment {
         // Open the new camera
         openCamera(currentCameraId);
     }
+
     private void createCameraPreview() {
         try {
             SurfaceTexture texture = textureView.getSurfaceTexture();
             assert texture != null;
-            texture.setDefaultBufferSize(2296, 4080); // Adjust the size as needed
+
+            // Get the supported sizes for the camera
+            StreamConfigurationMap map = cameraManager.getCameraCharacteristics(cameraId)
+                    .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+            Size[] outputSizes = map.getOutputSizes(SurfaceTexture.class);
+
+            // Choose the optimal preview size based on the aspect ratio of TextureView
+            Size previewSize = chooseOptimalSize(outputSizes, textureView.getWidth(), textureView.getHeight());
+
+            // Set the default buffer size to the chosen preview size
+            texture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
 
             Surface surface = new Surface(texture);
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-
             captureRequestBuilder.addTarget(surface);
 
             cameraDevice.createCaptureSession(Collections.singletonList(surface),
@@ -284,26 +343,51 @@ public class CameraFragment extends Fragment {
             Log.e(TAG, "Cannot access the camera", e);
         }
     }
+    private Size chooseOptimalSize(Size[] choices, int textureViewWidth, int textureViewHeight) {
+        List<Size> bigEnough = new ArrayList<>();
+        List<Size> notBigEnough = new ArrayList<>();
+        float aspectRatio = (float) textureViewWidth / textureViewHeight;
+        for (Size option : choices) {
+            if (option.getWidth() >= textureViewWidth && option.getHeight() >= textureViewHeight) {
+                bigEnough.add(option);
+            } else {
+                notBigEnough.add(option);
+            }
+        }
+        if (bigEnough.size() > 0) {
+            return Collections.min(bigEnough, new CompareSizesByArea());
+        } else if (notBigEnough.size() > 0) {
+            return Collections.max(notBigEnough, new CompareSizesByArea());
+        } else {
+            Log.e(TAG, "Couldn't find any suitable preview size");
+            return choices[0];
+        }
+    }
 
+    // Comparator for comparing sizes by their areas
+    static class CompareSizesByArea implements Comparator<Size> {
+        @Override
+        public int compare(Size lhs, Size rhs) {
+            // We cast here to ensure the multiplications won't overflow
+            return Long.signum((long) lhs.getWidth() * lhs.getHeight() -
+                    (long) rhs.getWidth() * rhs.getHeight());
+        }
+    }
     private void setTextureViewAspectRatio(int width, int height) {
         if (width > 0 && height > 0) {
             int newWidth;
             int newHeight;
-            if (isAspectRatioSquare) {
-                // Nếu là tỉ lệ 1:1
-                newWidth = Math.min(width, height);
-                newHeight = newWidth;
-            } else {
-                // Nếu là tỉ lệ 3:4
-                newWidth = width;
-                newHeight = (int) (width * 1.33); // 3:4 = 4:3/3
-            }
+
+            newWidth = width;
+            newHeight = (int) (width * 1.33); // 3:4 = 4:3/3
+
             ViewGroup.LayoutParams layoutParams = textureView.getLayoutParams();
             layoutParams.width = newWidth;
             layoutParams.height = newHeight;
             textureView.setLayoutParams(layoutParams);
         }
     }
+
     public enum AspectRatio {
         SQUARE,     // 1:1
         STANDARD,   // 3:4
@@ -329,10 +413,10 @@ public class CameraFragment extends Fragment {
         updateTextureViewAspectRatio();
     }
 
-   
+
     private void updateTextureViewAspectRatio() {
-        int width = textureView.getWidth();
-        int height = textureView.getHeight();
+        int width = w;
+        int height = h;
 
         if (width > 0 && height > 0) {
             int newWidth;
@@ -363,6 +447,7 @@ public class CameraFragment extends Fragment {
             textureView.setLayoutParams(layoutParams);
         }
     }
+
     private void closeCamera() {
         if (cameraCaptureSession != null) {
             cameraCaptureSession.close();
