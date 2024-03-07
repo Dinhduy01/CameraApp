@@ -21,12 +21,14 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 import android.util.Size;
+import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -151,11 +153,13 @@ public class CameraFragment extends Fragment {
         });
         return view;
     }
+
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse("content://media/internal/images/media"));
         startActivity(intent);
     }
+
     private void takePicture() {
         if (cameraDevice == null) {
             Log.e(TAG, "CameraDevice is null. Cannot take picture.");
@@ -172,17 +176,19 @@ public class CameraFragment extends Fragment {
         try {
             FileOutputStream outputStream = new FileOutputStream(pictureFile);
 
-            // Kiểm tra hướng của ảnh
+            // Xác định hướng quay của thiết bị
             int rotation = requireActivity().getWindowManager().getDefaultDisplay().getRotation();
-            int orientation = getOrientation(rotation);
 
-            // Nếu ảnh được chụp trong chế độ ngang, xoay lại thành chế độ dọc
-            if (orientation == 90 || orientation == 270) {
-                Bitmap rotatedBitmap = rotateBitmap(textureView.getBitmap(), 90);
-                rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
-            } else {
-                textureView.getBitmap().compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+            // Xác định hướng xoay cần thiết để điều chỉnh ảnh
+            int neededRotation = ORIENTATIONS.get(rotation);
+
+            if (ORIENTATIONS.get(rotation) == 270) {
+                neededRotation = -90;
             }
+            // Nếu ảnh được chụp trong chế độ ngang, xoay lại thành chế độ dọc
+            // Bitmap rotatedBitmap = rotateBitmap(textureView.getBitmap(), neededRotation);
+            Toast.makeText(requireActivity(), "" + rotation, Toast.LENGTH_LONG).show();
+            textureView.getBitmap().compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
 
             outputStream.close();
             Log.d(TAG, "Picture saved: " + pictureFile.getAbsolutePath());
@@ -192,19 +198,22 @@ public class CameraFragment extends Fragment {
         }
     }
 
-    private int getOrientation(int rotation) {
-        switch (rotation) {
-            case Surface.ROTATION_0:
-                return 90;
-            case Surface.ROTATION_90:
-                return 0;
-            case Surface.ROTATION_180:
-                return 270;
-            case Surface.ROTATION_270:
-                return 180;
-            default:
-                return 0;
-        }
+    private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
+
+    static {
+        ORIENTATIONS.append(Surface.ROTATION_0, 90);
+        ORIENTATIONS.append(Surface.ROTATION_90, 0);
+        ORIENTATIONS.append(Surface.ROTATION_180, 270);
+        ORIENTATIONS.append(Surface.ROTATION_270, 180);
+    }
+
+    private static final SparseIntArray ORIENTATIONS_REAL = new SparseIntArray();
+
+    static {
+        ORIENTATIONS_REAL.append(Surface.ROTATION_0, 0);
+        ORIENTATIONS_REAL.append(Surface.ROTATION_90, 90);
+        ORIENTATIONS_REAL.append(Surface.ROTATION_180, 180);
+        ORIENTATIONS_REAL.append(Surface.ROTATION_270, 270);
     }
 
     private Bitmap rotateBitmap(Bitmap bitmap, int degrees) {
@@ -343,6 +352,7 @@ public class CameraFragment extends Fragment {
             Log.e(TAG, "Cannot access the camera", e);
         }
     }
+
     private Size chooseOptimalSize(Size[] choices, int textureViewWidth, int textureViewHeight) {
         List<Size> bigEnough = new ArrayList<>();
         List<Size> notBigEnough = new ArrayList<>();
@@ -373,6 +383,7 @@ public class CameraFragment extends Fragment {
                     (long) rhs.getWidth() * rhs.getHeight());
         }
     }
+
     private void setTextureViewAspectRatio(int width, int height) {
         if (width > 0 && height > 0) {
             int newWidth;
@@ -394,7 +405,7 @@ public class CameraFragment extends Fragment {
         WIDE        // 16:9
     }
 
-    private AspectRatio currentAspectRatio = AspectRatio.SQUARE; // Bắt đầu với tỉ lệ vuông
+    private AspectRatio currentAspectRatio = AspectRatio.WIDE; // Bắt đầu với tỉ lệ vuông
 
     private void switchAspectRatio() {
         switch (currentAspectRatio) {
