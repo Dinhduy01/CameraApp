@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -13,7 +14,10 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.media.Image;
+import android.media.ImageReader;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -37,6 +41,7 @@ import androidx.fragment.app.Fragment;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,7 +51,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class CameraFragment extends Fragment {
-
+    private Surface surface;
     private static final int REQUEST_CAMERA_PERMISSION = 200;
     private static final String TAG = CameraFragment.class.getSimpleName();
 
@@ -92,7 +97,7 @@ public class CameraFragment extends Fragment {
         @Override
         public void onOpened(@NonNull CameraDevice camera) {
             cameraDevice = camera;
-            createCameraPreview();
+            createCameraPreview(flashMode);
         }
 
         @Override
@@ -112,14 +117,43 @@ public class CameraFragment extends Fragment {
     }
 
     private View view;
+    int flashMode = CaptureRequest.FLASH_MODE_TORCH; // Biến để lưu trạng thái flash hiện tại
+    final int FLASH_OFF = 0;
+    final int FLASH_ON = 1;
+    final int FLASH_AUTO = 2;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_camera, container, false);
 
-
+        ImageButton flashButton = view.findViewById(R.id.flashButton);
         ImageButton captureButton = view.findViewById(R.id.captureButton);
         ImageButton changeCamera = view.findViewById(R.id.switchCameraButton);
+        flashButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Thay đổi trạng thái flash và hình ảnh tương ứng trên nút
+                switch (flashMode) {
+                    case FLASH_OFF:
+                        flashMode = FLASH_ON;
+                        flashButton.setImageResource(R.drawable.flash); // Đặt hình ảnh khi flash bật
+                        // Thực hiện các hành động cần thiết khi flash bật
+
+                        break;
+                    case FLASH_ON:
+                        flashMode = FLASH_AUTO;
+                        flashButton.setImageResource(R.drawable.flashac); // Đặt hình ảnh khi flash tự động
+                        // Thực hiện các hành động cần thiết khi flash tự động
+                        break;
+                    case FLASH_AUTO:
+                        flashMode = FLASH_OFF;
+                        flashButton.setImageResource(R.drawable.noflash); // Đặt hình ảnh khi flash tắt
+                        // Thực hiện các hành động cần thiết khi flash tắt
+                        break;
+                }
+                createCameraPreview(flashMode);
+            }
+        });
         captureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -174,29 +208,81 @@ public class CameraFragment extends Fragment {
         }
 
         try {
-            FileOutputStream outputStream = new FileOutputStream(pictureFile);
+            ImageReader reader = ImageReader.newInstance(640, 480, ImageFormat.JPEG, 1);
+            List<Surface> outputSurfaces = new ArrayList<>(2);
+            outputSurfaces.add(reader.getSurface());
+            outputSurfaces.add(new Surface(textureView.getSurfaceTexture()));
 
-            // Xác định hướng quay của thiết bị
-            int rotation = requireActivity().getWindowManager().getDefaultDisplay().getRotation();
+            final CaptureRequest.Builder captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+            captureBuilder.addTarget(reader.getSurface());
+            captureBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+            captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON);
 
-            // Xác định hướng xoay cần thiết để điều chỉnh ảnh
-            int neededRotation = ORIENTATIONS.get(rotation);
-
-            if (ORIENTATIONS.get(rotation) == 270) {
-                neededRotation = -90;
+            // Bật flash khi chụp ảnh
+            switch (flashMode) {
+                case 0:
+                    captureBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
+                    break;
+                case 1:
+                    captureBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH);
+                    break;
+                case 2:
+                    captureBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+                    break;
             }
-            // Nếu ảnh được chụp trong chế độ ngang, xoay lại thành chế độ dọc
-            // Bitmap rotatedBitmap = rotateBitmap(textureView.getBitmap(), neededRotation);
-            Toast.makeText(requireActivity(), "" + rotation, Toast.LENGTH_LONG).show();
-            textureView.getBitmap().compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
 
-            outputStream.close();
-            Log.d(TAG, "Picture saved: " + pictureFile.getAbsolutePath());
-        } catch (IOException e) {
-            Log.e(TAG, "Error saving picture: " + e.getMessage());
-            e.printStackTrace();
+
+            CameraCaptureSession.CaptureCallback captureCallback = new CameraCaptureSession.CaptureCallback() {
+                @Override
+                public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
+                    super.onCaptureCompleted(session, request, result);
+                    Toast.makeText(getActivity(), "Image Captured!", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "Image Captured!");
+                    // Add code to handle captured image
+                    Image image = reader.acquireLatestImage();
+                    if (image != null) {
+                        ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+                        byte[] bytes = new byte[buffer.remaining()];
+                        buffer.get(bytes);
+
+                        File pictureFile = getOutputMediaFile();
+                        if (pictureFile != null) {
+                            try (FileOutputStream fos = new FileOutputStream(pictureFile)) {
+                                fos.write(bytes);
+                                Log.d(TAG, "Image saved: " + pictureFile.getAbsolutePath());
+                            } catch (IOException e) {
+                                Log.e(TAG, "Error saving image", e);
+                            }
+                        }
+
+                        image.close();
+                    }
+
+                    // Trả lại cài đặt flash về chế độ tắt (OFF)
+                    createCameraPreview(CaptureRequest.FLASH_MODE_OFF);
+                }
+            };
+
+            cameraDevice.createCaptureSession(outputSurfaces, new CameraCaptureSession.StateCallback() {
+                @Override
+                public void onConfigured(@NonNull CameraCaptureSession session) {
+                    try {
+                        session.capture(captureBuilder.build(), captureCallback, backgroundHandler);
+                    } catch (CameraAccessException e) {
+                        Log.e(TAG, "Cannot access the camera", e);
+                    }
+                }
+
+                @Override
+                public void onConfigureFailed(@NonNull CameraCaptureSession session) {
+                    Log.e(TAG, "Failed to configure camera");
+                }
+            }, backgroundHandler);
+        } catch (CameraAccessException e) {
+            Log.e(TAG, "Cannot access the camera", e);
         }
     }
+
 
     private static final SparseIntArray ORIENTATIONS = new SparseIntArray();
 
@@ -216,15 +302,10 @@ public class CameraFragment extends Fragment {
         ORIENTATIONS_REAL.append(Surface.ROTATION_270, 270);
     }
 
-    private Bitmap rotateBitmap(Bitmap bitmap, int degrees) {
-        Matrix matrix = new Matrix();
-        matrix.postRotate(degrees);
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-    }
 
     // Phương thức để tạo tập tin lưu ảnh trong thư mục Pictures
     private File getOutputMediaFile() {
-        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera");
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Camera/Image");
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
                 Log.e(TAG, "Failed to create directory");
@@ -240,8 +321,6 @@ public class CameraFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         textureView = view.findViewById(R.id.surfaceView);
-
-
     }
 
     @Override
@@ -306,7 +385,7 @@ public class CameraFragment extends Fragment {
         openCamera(currentCameraId);
     }
 
-    private void createCameraPreview() {
+    private void createCameraPreview(int flashMode) {
         try {
             SurfaceTexture texture = textureView.getSurfaceTexture();
             assert texture != null;
@@ -322,10 +401,24 @@ public class CameraFragment extends Fragment {
             // Set the default buffer size to the chosen preview size
             texture.setDefaultBufferSize(previewSize.getWidth(), previewSize.getHeight());
 
-            Surface surface = new Surface(texture);
+            // Initialize surface
+            surface = new Surface(texture); // Initialize surface here
+
+            // Add surface as a target to capture request builder
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-            captureRequestBuilder.addTarget(surface);
+            switch (flashMode) {
+                case 0:
+                    captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
+                    break;
+                case 1:
+                    captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_TORCH);
+                    break;
+                case 2:
+                    captureRequestBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+                    break;
+            }
+            captureRequestBuilder.addTarget(surface); // Use the initialized surface here
 
             cameraDevice.createCaptureSession(Collections.singletonList(surface),
                     new CameraCaptureSession.StateCallback() {
@@ -352,6 +445,7 @@ public class CameraFragment extends Fragment {
             Log.e(TAG, "Cannot access the camera", e);
         }
     }
+
 
     private Size chooseOptimalSize(Size[] choices, int textureViewWidth, int textureViewHeight) {
         List<Size> bigEnough = new ArrayList<>();

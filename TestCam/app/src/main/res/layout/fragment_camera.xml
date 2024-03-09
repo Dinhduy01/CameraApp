@@ -11,6 +11,13 @@
         tools:ignore="RelativeOverlap"
         android:layout_centerInParent="true"/>
 
+
+    <ImageButton
+        android:id="@+id/flashButton"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:src="@drawable/flash"
+        android:layout_gravity="bottom|start"/>
     <!-- Button to switch between front and back cameras -->
     <ImageButton
         android:id="@+id/switchCameraButton"
