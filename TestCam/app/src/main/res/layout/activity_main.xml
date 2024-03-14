@@ -1,10 +1,154 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.fragment.app.FragmentContainerView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/fragment_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
 
-    tools:context=".MainActivity"
-    />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white">
+
+
+        <ImageButton
+            android:id="@+id/setting"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_vertical"
+            android:background="@null"
+            android:src="@drawable/setting" />
+
+        <ImageButton
+            android:id="@+id/switchAspectRatioButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="90dp"
+            android:background="@null"
+            android:contentDescription="TODO"
+            android:src="@drawable/aspect_ratio" />
+
+        <ImageButton
+            android:id="@+id/changeType"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center"
+            android:background="@null"
+            android:src="@drawable/video_svgrepo_com" />
+
+    </FrameLayout>
+
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragment_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </androidx.fragment.app.FragmentContainerView>
+
+    <RelativeLayout
+        android:id="@+id/settingLayout"
+        android:layout_width="356dp"
+        android:layout_height="403dp"
+        android:layout_centerInParent="true"
+        android:background="#40808080"
+        android:visibility="invisible">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:text="Setting"
+            android:textSize="35sp" />
+
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="222dp"
+            android:layout_marginBottom="282dp"
+            android:text="@string/flash"
+            android:textColor="@color/black"
+            android:textSize="25sp" />
+
+
+        <ToggleButton
+            android:id="@+id/flashButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="43dp"
+            android:layout_marginBottom="281dp"
+            android:background="@color/white"
+            android:checked="false"
+            android:textColor="@color/black"
+            android:textOff="Off"
+            android:textOn="On" />
+
+        <TextView
+            android:layout_width="160dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="164dp"
+            android:layout_marginBottom="172dp"
+            android:text="@string/viewGallery"
+            android:textColor="@color/black"
+            android:textSize="25sp" />
+
+        <ToggleButton
+            android:id="@+id/viewGalleryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="44dp"
+            android:layout_marginBottom="170dp"
+            android:background="@color/white"
+            android:checked="false"
+            android:textColor="@color/black"
+            android:textOff="Off"
+            android:textOn="On" />
+
+        <TextView
+            android:layout_width="160dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="161dp"
+            android:layout_marginBottom="71dp"
+            android:text="@string/viewApp"
+            android:textColor="@color/black"
+            android:textSize="25sp" />
+
+
+        <ToggleButton
+            android:id="@+id/viewAppButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="42dp"
+            android:layout_marginBottom="69dp"
+            android:background="@color/white"
+            android:checked="false"
+            android:textColor="@color/black"
+            android:textOff="Off"
+            android:textOn="On" />
+
+        <ImageButton
+            android:id="@+id/closeSetting"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:background="@null"
+            android:src="@drawable/close" />
+    </RelativeLayout>
+
+</RelativeLayout>

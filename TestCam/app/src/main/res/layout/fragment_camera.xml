@@ -1,65 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
 
     <com.example.testcam.AutoFitTextureView
         android:id="@+id/surfaceView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        tools:ignore="RelativeOverlap"
-        android:layout_centerInParent="true"/>
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <FrameLayout
+        android:id="@+id/control"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="20dp"
+        android:background="@color/white">
+
+        <ImageView
+            android:id="@+id/galleryButton"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center_vertical|left"
+            android:src="@drawable/img_5"
+            android:background="@null"
+            android:scaleType="fitXY"
+            android:padding="20dp"
+            tools:ignore="RtlHardcoded" />
+
+        <ImageButton
+            android:id="@+id/captureButton"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center"
+            android:background="@drawable/image2" />
+
+        <ImageButton
+            android:id="@+id/switchCameraButton"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center_vertical|right"
+            android:background="@null"
+            android:padding="20dp"
+            android:src="@drawable/changecam"
+            tools:ignore="RtlHardcoded" />
 
 
-    <ImageButton
-        android:id="@+id/flashButton"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:src="@drawable/flash"
-        android:layout_gravity="bottom|start"/>
+    </FrameLayout>
     <!-- Button to switch between front and back cameras -->
-    <ImageButton
-        android:id="@+id/switchCameraButton"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:src="@drawable/img_1"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp" />
 
-    <!-- Button to switch between aspect ratios -->
-    <ImageButton
-        android:id="@+id/switchAspectRatioButton"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:src="@drawable/img_2"
-        android:layout_above="@id/switchCameraButton"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp" />
-
-    <!-- Button to open image gallery -->
-    <ImageButton
-        android:id="@+id/galleryButton"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:src="@drawable/img_3"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="16dp"
-        android:layout_marginBottom="16dp"
-        android:contentDescription="TODO" />
-
-    <!-- Button to capture photo -->
-    <ImageButton
-        android:id="@+id/captureButton"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:src="@drawable/img"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="16dp" />
 
 </RelativeLayout>
