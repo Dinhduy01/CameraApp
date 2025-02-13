@@ -177,8 +177,6 @@ public class VideoFragment extends Fragment {
 
             }
         });
-
-
         return binding.getRoot();
     }
 

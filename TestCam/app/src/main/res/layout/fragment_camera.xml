@@ -14,45 +14,7 @@
         android:layout_centerInParent="true"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <FrameLayout
-        android:id="@+id/control"
-        android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="20dp"
-        android:background="@color/white">
 
-        <ImageView
-            android:id="@+id/galleryButton"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_gravity="center_vertical|left"
-            android:src="@drawable/img_5"
-            android:background="@null"
-            android:scaleType="fitXY"
-            android:padding="20dp"
-            tools:ignore="RtlHardcoded" />
-
-        <ImageButton
-            android:id="@+id/captureButton"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_gravity="center"
-            android:background="@drawable/image2" />
-
-        <ImageButton
-            android:id="@+id/switchCameraButton"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_gravity="center_vertical|right"
-            android:background="@null"
-            android:padding="20dp"
-            android:src="@drawable/changecam"
-            tools:ignore="RtlHardcoded" />
-
-
-    </FrameLayout>
     <!-- Button to switch between front and back cameras -->
 
 

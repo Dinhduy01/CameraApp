@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -8,10 +9,12 @@
     tools:context=".MainActivity">
 
     <FrameLayout
+        android:id="@+id/setting_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white">
-
+        android:background="@color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
             android:id="@+id/setting"
@@ -41,114 +44,24 @@
 
     </FrameLayout>
 
+    <include layout="@layout/view_setting_out"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        app:layout_constraintTop_toBottomOf="@id/setting_container">
+
 
     </androidx.fragment.app.FragmentContainerView>
 
-    <RelativeLayout
-        android:id="@+id/settingLayout"
-        android:layout_width="356dp"
-        android:layout_height="403dp"
-        android:layout_centerInParent="true"
-        android:background="#40808080"
-        android:visibility="invisible">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:text="Setting"
-            android:textSize="35sp" />
-
-        <TextView
-            android:layout_width="100dp"
-            android:layout_height="40dp"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginEnd="222dp"
-            android:layout_marginBottom="282dp"
-            android:text="@string/flash"
-            android:textColor="@color/black"
-            android:textSize="25sp" />
-
-
-        <ToggleButton
-            android:id="@+id/flashButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginEnd="43dp"
-            android:layout_marginBottom="281dp"
-            android:background="@color/white"
-            android:checked="false"
-            android:textColor="@color/black"
-            android:textOff="Off"
-            android:textOn="On" />
-
-        <TextView
-            android:layout_width="160dp"
-            android:layout_height="40dp"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginEnd="164dp"
-            android:layout_marginBottom="172dp"
-            android:text="@string/viewGallery"
-            android:textColor="@color/black"
-            android:textSize="25sp" />
-
-        <ToggleButton
-            android:id="@+id/viewGalleryButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginEnd="44dp"
-            android:layout_marginBottom="170dp"
-            android:background="@color/white"
-            android:checked="false"
-            android:textColor="@color/black"
-            android:textOff="Off"
-            android:textOn="On" />
-
-        <TextView
-            android:layout_width="160dp"
-            android:layout_height="40dp"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginEnd="161dp"
-            android:layout_marginBottom="71dp"
-            android:text="@string/viewApp"
-            android:textColor="@color/black"
-            android:textSize="25sp" />
-
-
-        <ToggleButton
-            android:id="@+id/viewAppButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginEnd="42dp"
-            android:layout_marginBottom="69dp"
-            android:background="@color/white"
-            android:checked="false"
-            android:textColor="@color/black"
-            android:textOff="Off"
-            android:textOn="On" />
-
-        <ImageButton
-            android:id="@+id/closeSetting"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:background="@null"
-            android:src="@drawable/close" />
-    </RelativeLayout>
-
-</RelativeLayout>
+    <include
+        android:id="@+id/bottom_area"
+        layout="@layout/bottom_area"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/fragment_container" />
+</androidx.constraintlayout.widget.ConstraintLayout>

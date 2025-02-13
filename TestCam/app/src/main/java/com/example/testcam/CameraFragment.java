@@ -130,43 +130,6 @@ public class CameraFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentCameraBinding.inflate(getLayoutInflater());
-        ImageButton captureButton = binding.captureButton;
-        ImageButton changeCamera = binding.switchCameraButton;
-        captureButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                takePicture();
-            }
-        });
-        changeCamera.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                switchCamera();
-            }
-        });
-        ImageView galleryButton = binding.galleryButton;
-        galleryButton.setOnClickListener(new View.OnClickListener() {
-            @SuppressLint("QueryPermissionsNeeded")
-            @Override
-            public void onClick(View v) {
-                closeCamera();
-                if (MainActivity.openApp) {
-                    Intent intent = new Intent(requireActivity(), ViewGallery.class);
-                    startActivity(intent);
-                } else {
-
-                    //FileProvider là một lớp trong Android SDK cung cấp cơ chế để chia sẻ tệp tin của ứng dụng với các ứng dụng khác một cách an toàn
-                    Uri imageUri = FileProvider.getUriForFile(requireActivity(), "com.example.testcase.provider", urlImg);
-                    Log.d("Cam2", "onClick: " + imageUri);
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-
-                    intent.setDataAndType(imageUri, "image/*");
-                    intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    intent.setPackage("com.sec.android.gallery3d");
-                    startActivity(intent);
-                }
-            }
-        });
         return binding.getRoot();
     }
 

@@ -1,12 +1,17 @@
 
 package com.example.testcam;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -26,6 +31,43 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        ImageButton captureButton = binding.bottomArea.captureButton;
+        ImageButton changeCamera = binding.bottomArea.switchCameraButton;
+        captureButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                takePicture();
+            }
+        });
+        changeCamera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switchCamera();
+            }
+        });
+        ImageView galleryButton = binding.galleryButton;
+        galleryButton.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("QueryPermissionsNeeded")
+            @Override
+            public void onClick(View v) {
+                closeCamera();
+                if (MainActivity.openApp) {
+                    Intent intent = new Intent(requireActivity(), ViewGallery.class);
+                    startActivity(intent);
+                } else {
+
+                    //FileProvider là một lớp trong Android SDK cung cấp cơ chế để chia sẻ tệp tin của ứng dụng với các ứng dụng khác một cách an toàn
+                    Uri imageUri = FileProvider.getUriForFile(requireActivity(), "com.example.testcase.provider", urlImg);
+                    Log.d("Cam2", "onClick: " + imageUri);
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+
+                    intent.setDataAndType(imageUri, "image/*");
+                    intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    intent.setPackage("com.sec.android.gallery3d");
+                    startActivity(intent);
+                }
+            }
+        });
         fragmentManager = getSupportFragmentManager();
         // Hiển thị fragment ban đầu khi activity được tạo
         displayInitialFragment();
