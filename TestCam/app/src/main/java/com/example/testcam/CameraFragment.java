@@ -130,8 +130,6 @@ public class CameraFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentCameraBinding.inflate(getLayoutInflater());
-
-
         ImageButton captureButton = binding.captureButton;
         ImageButton changeCamera = binding.switchCameraButton;
         captureButton.setOnClickListener(new View.OnClickListener() {
@@ -158,13 +156,13 @@ public class CameraFragment extends Fragment {
                 } else {
 
                     //FileProvider là một lớp trong Android SDK cung cấp cơ chế để chia sẻ tệp tin của ứng dụng với các ứng dụng khác một cách an toàn
-                    Uri imageUri = FileProvider.getUriForFile(requireActivity(), "com.example.testcam.provider", urlImg);
+                    Uri imageUri = FileProvider.getUriForFile(requireActivity(), "com.example.testcase.provider", urlImg);
                     Log.d("Cam2", "onClick: " + imageUri);
                     Intent intent = new Intent(Intent.ACTION_VIEW);
 
                     intent.setDataAndType(imageUri, "image/*");
                     intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    intent.setPackage("com.miui.gallery");
+                    intent.setPackage("com.sec.android.gallery3d");
                     startActivity(intent);
                 }
             }
@@ -292,8 +290,11 @@ public class CameraFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         textureView = binding.surfaceView;
         getMediaFiles();
-        urlImg = mediaList.get(0);
-        Glide.with(requireActivity()).load(mediaList.get(0)).into(binding.galleryButton);
+        if (!mediaList.isEmpty()) {
+            urlImg = mediaList.get(0);
+            Glide.with(requireActivity()).load(mediaList.get(0)).into(binding.galleryButton);
+        }
+
 
     }
 
@@ -363,8 +364,9 @@ public class CameraFragment extends Fragment {
             String[] cameraIds = cameraManager.getCameraIdList();
             if (cameraIds.length > 0) {
                 cameraId = cameraIds[currentCameraId];
-                if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+                    ActivityCompat.requestPermissions(requireActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_CAMERA_PERMISSION);
                     return;
                 }// Mặc định sử dụng camera sau
 

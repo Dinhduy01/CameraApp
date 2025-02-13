@@ -2,6 +2,7 @@
 package com.example.testcam;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 
@@ -13,6 +14,8 @@ import androidx.fragment.app.FragmentTransaction;
 import com.example.testcam.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
+
+    private final String TAG = "MainActivity";
     private ActivityMainBinding binding;
     private FragmentManager fragmentManager;
     private String fragmentTag;
@@ -74,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
             fragmentTag = "camera"; // Đặt tag cho fragment mới
             binding.switchAspectRatioButton.setVisibility(View.VISIBLE); // Hiển thị nút switchAspectRatioButton
         }
+        Log.e(TAG, "switchFragment: "+fragmentTag );
         FragmentTransaction transaction = fragmentManager.beginTransaction(); // Bắt đầu một giao dịch fragment
         transaction.replace(binding.fragmentContainer.getId(), newFragment); // Thay thế fragment hiện tại bằng fragment mới
         transaction.addToBackStack(null); // Thêm fragment hiện tại vào stack để có thể quay lại sau này
